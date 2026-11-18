@@ -1,0 +1,8 @@
+﻿task,with_model_ok,without_model_ok,with_model_matched,without_model_matched,fair_or_cheap_ratio_top,review_flagged
+整租_闵行_预算6500,True,True,1463,1463,1.0,False
+整租_宝山_预算6500,True,True,1746,1746,1.0,False
+整租_黄浦_预算6500,True,True,393,393,0.4,True
+整租_浦东_预算6500,True,True,901,901,0.8,False
+整租_嘉定_预算6500,True,True,856,856,0.0,True
+边界_预算过低,False,False,0,0,0.0,True
+整租_高预算,True,True,1859,1859,1.0,False

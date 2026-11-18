@@ -1,0 +1,73 @@
+{
+  "passed": 6,
+  "total": 6,
+  "pass_rate": 1.0,
+  "rows": [
+    {
+      "id": "normal_pudong",
+      "name": "正常-浦东预算6000",
+      "passed": true,
+      "agent_ok": true,
+      "success": true,
+      "need_human_review": false,
+      "n_items": 5,
+      "message": "找到 750 套房源，返回 Top-5。",
+      "reasons": ""
+    },
+    {
+      "id": "normal_minhang_2rooms",
+      "name": "正常-闵行两室",
+      "passed": true,
+      "agent_ok": true,
+      "success": true,
+      "need_human_review": false,
+      "n_items": 5,
+      "message": "找到 894 套房源，返回 Top-5。",
+      "reasons": ""
+    },
+    {
+      "id": "boundary_low_budget",
+      "name": "边界-预算过低",
+      "passed": true,
+      "agent_ok": false,
+      "success": false,
+      "need_human_review": true,
+      "n_items": 0,
+      "message": "无匹配房源：请放宽预算、区域或面积约束。",
+      "reasons": ""
+    },
+    {
+      "id": "boundary_bad_area",
+      "name": "异常-面积区间颠倒",
+      "passed": true,
+      "agent_ok": false,
+      "success": false,
+      "need_human_review": true,
+      "n_items": 0,
+      "message": "输入异常，已拒绝执行。最小面积不能大于最大面积",
+      "reasons": ""
+    },
+    {
+      "id": "ablation_no_model",
+      "name": "消融-关闭模型",
+      "passed": true,
+      "agent_ok": true,
+      "success": true,
+      "need_human_review": false,
+      "n_items": 5,
+      "message": "找到 750 套房源，返回 Top-5。",
+      "reasons": ""
+    },
+    {
+      "id": "unknown_district",
+      "name": "边界-未知区域",
+      "passed": true,
+      "agent_ok": false,
+      "success": false,
+      "need_human_review": true,
+      "n_items": 0,
+      "message": "无匹配房源：请放宽预算、区域或面积约束。",
+      "reasons": ""
+    }
+  ]
+}

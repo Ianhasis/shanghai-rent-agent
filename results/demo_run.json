@@ -1,0 +1,145 @@
+{
+  "ok": true,
+  "success": true,
+  "message": "找到 750 套房源，返回 Top-5。",
+  "need_human_review": false,
+  "steps": [
+    {
+      "name": "任务入口",
+      "purpose": "接收并校验用户输入（预算/区域/面积等）",
+      "status": "done",
+      "detail": "budget=6000, district=浦东, area=[30,80], rooms=不限"
+    },
+    {
+      "name": "连接数据工具",
+      "purpose": "加载本地上海房源库，核对可用性",
+      "status": "done",
+      "detail": "已连接房源库，共 18121 条"
+    },
+    {
+      "name": "加载 ML 组件",
+      "purpose": "加载回归模型（Linear/Ridge/Lasso 中验证集最优）",
+      "status": "done",
+      "detail": "已加载 best_model.joblib"
+    },
+    {
+      "name": "硬约束筛选",
+      "purpose": "按预算、区域、面积过滤候选房源",
+      "status": "done",
+      "detail": "硬约束后剩余 750 套"
+    },
+    {
+      "name": "公允租金预测",
+      "purpose": "对候选调用回归模型推理",
+      "status": "done",
+      "detail": "完成候选房源公允租金推理"
+    },
+    {
+      "name": "建议生成",
+      "purpose": "比较挂牌价与预测价，输出偏贵/合理/偏便宜",
+      "status": "done",
+      "detail": "已生成建议标签与排序"
+    },
+    {
+      "name": "失败与安全检查",
+      "purpose": "处理无结果、异常输入、高偏差，必要时人工复核",
+      "status": "done",
+      "detail": "高偏差条目 0/5；未触发强制复核"
+    }
+  ],
+  "items": [
+    {
+      "title": "生活很便利，低区出入方便，上门实勘，享受好房",
+      "district": "浦东",
+      "rent_type": "整租",
+      "area": 39.0,
+      "rooms": 1,
+      "listed_price": 3300.0,
+      "pred_price": 3348.8,
+      "advice": "价格合理",
+      "price_gap_ratio": -0.015,
+      "need_human_review": false,
+      "address": "巨野小区"
+    },
+    {
+      "title": "由由五村2居室 01卧",
+      "district": "浦东",
+      "rent_type": "整租",
+      "area": 37.0,
+      "rooms": 2,
+      "listed_price": 2460.0,
+      "pred_price": 2129.6,
+      "advice": "偏贵",
+      "price_gap_ratio": 0.155,
+      "need_human_review": false,
+      "address": "由由五村"
+    },
+    {
+      "title": "明珠苑（浦东）3居室 01卧",
+      "district": "浦东",
+      "rent_type": "整租",
+      "area": 32.0,
+      "rooms": 3,
+      "listed_price": 2560.0,
+      "pred_price": 2239.7,
+      "advice": "价格合理",
+      "price_gap_ratio": 0.143,
+      "need_human_review": false,
+      "address": "明珠苑（浦东）"
+    },
+    {
+      "title": "附近有地铁，好楼层，1室0厅1卫，链家好房",
+      "district": "浦东",
+      "rent_type": "整租",
+      "area": 36.0,
+      "rooms": 1,
+      "listed_price": 3300.0,
+      "pred_price": 3229.2,
+      "advice": "价格合理",
+      "price_gap_ratio": 0.022,
+      "need_human_review": false,
+      "address": "北蔡大街31弄"
+    },
+    {
+      "title": "博山小区，链家好房，上下楼方便，小户型",
+      "district": "浦东",
+      "rent_type": "整租",
+      "area": 38.0,
+      "rooms": 1,
+      "listed_price": 3200.0,
+      "pred_price": 3367.4,
+      "advice": "价格合理",
+      "price_gap_ratio": -0.05,
+      "need_human_review": false,
+      "address": "博山小区"
+    }
+  ],
+  "summary": {
+    "matched": 750,
+    "returned": 5,
+    "budget": 6000.0,
+    "district": "浦东",
+    "rent_type": null,
+    "use_model": true,
+    "rooms": null,
+    "high_risk_items": 0
+  },
+  "safety": {
+    "reason": "ok",
+    "note": "预测≠成交价；签约前请人工核验实地与合同。",
+    "data_boundary": "历史公开挂牌，可能过时；仅课程原型。"
+  },
+  "success_criteria": {
+    "定义": {
+      "返回可检查结果": "至少返回 1 条房源或明确无匹配说明",
+      "估价建议可用": "启用模型时，结果含预测公允价与建议标签",
+      "异常可处置": "输入错误/无匹配/高偏差有明确提示或人工复核"
+    },
+    "本次判定": {
+      "返回可检查结果": true,
+      "估价建议可用": true,
+      "异常可处置": true
+    },
+    "总体成功": true
+  }
+}

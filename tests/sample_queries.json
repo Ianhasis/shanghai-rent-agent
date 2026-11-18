@@ -1,0 +1,42 @@
+{
+  "description": "可复现测试样例（课程交付用）。运行：python tests/run_samples.py",
+  "success_rule": "启用模型时须返回房源且含预测价与建议；边界任务可无匹配但必须给出明确失败说明",
+  "cases": [
+    {
+      "id": "normal_pudong",
+      "name": "正常-浦东预算6000",
+      "input": {"budget": 6000, "district": "浦东", "min_area": 30, "max_area": 80, "rooms": null, "use_model": true},
+      "expect": {"ok": true, "min_items": 1}
+    },
+    {
+      "id": "normal_minhang_2rooms",
+      "name": "正常-闵行两室",
+      "input": {"budget": 7000, "district": "闵行", "min_area": 50, "max_area": 100, "rooms": 2, "use_model": true},
+      "expect": {"ok": true, "min_items": 1}
+    },
+    {
+      "id": "boundary_low_budget",
+      "name": "边界-预算过低",
+      "input": {"budget": 1200, "district": "黄浦", "min_area": 60, "max_area": 100, "rooms": null, "use_model": true},
+      "expect": {"ok": false, "need_human_review": true}
+    },
+    {
+      "id": "boundary_bad_area",
+      "name": "异常-面积区间颠倒",
+      "input": {"budget": 6000, "district": "浦东", "min_area": 90, "max_area": 30, "rooms": null, "use_model": true},
+      "expect": {"ok": false, "need_human_review": true}
+    },
+    {
+      "id": "ablation_no_model",
+      "name": "消融-关闭模型",
+      "input": {"budget": 6000, "district": "浦东", "min_area": 30, "max_area": 80, "rooms": null, "use_model": false},
+      "expect": {"ok": true, "min_items": 1, "advice_contains": "仅规则筛选"}
+    },
+    {
+      "id": "unknown_district",
+      "name": "边界-未知区域",
+      "input": {"budget": 6000, "district": "不存在区", "min_area": 30, "max_area": 80, "rooms": null, "use_model": true},
+      "expect": {"ok": false, "need_human_review": true}
+    }
+  ]
+}

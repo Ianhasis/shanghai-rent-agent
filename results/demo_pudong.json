@@ -1,0 +1,90 @@
+{
+  "ok": true,
+  "message": "找到 631 套房源，返回 Top-5。",
+  "need_human_review": false,
+  "steps": [
+    "任务入口：接收用户预算与硬约束",
+    "加载房源库与（可选）回归模型",
+    "解析用户约束",
+    "连接本地房源库",
+    "按硬约束筛选",
+    "调用回归模型预测公允租金",
+    "生成偏贵/合理/偏便宜建议，并对高偏差标记人工复核"
+  ],
+  "summary": {
+    "matched": 631,
+    "returned": 5,
+    "budget": 3500.0,
+    "district": "浦东",
+    "rent_type": "合租",
+    "use_model": true
+  },
+  "items": [
+    {
+      "title": "中金海棠湾（公寓）3居室-北卧",
+      "district": "浦东",
+      "rent_type": "合租",
+      "area": 8.0,
+      "rooms": 3,
+      "listed_price": 1290.0,
+      "pred_price": 1302.7,
+      "advice": "价格合理",
+      "price_gap_ratio": -0.01,
+      "need_human_review": false,
+      "address": "浦东新区周浦中金海棠湾（公寓）07号楼07单元第15层1502"
+    },
+    {
+      "title": "明天华城（三期）5居室-南卧",
+      "district": "浦东",
+      "rent_type": "合租",
+      "area": 12.0,
+      "rooms": 5,
+      "listed_price": 1360.0,
+      "pred_price": 1449.9,
+      "advice": "价格合理",
+      "price_gap_ratio": -0.062,
+      "need_human_review": false,
+      "address": "浦东明天华城（三期）390单元16层1601"
+    },
+    {
+      "title": "明天华城（三期）5居室-北卧",
+      "district": "浦东",
+      "rent_type": "合租",
+      "area": 11.9,
+      "rooms": 5,
+      "listed_price": 1230.0,
+      "pred_price": 1406.0,
+      "advice": "价格合理",
+      "price_gap_ratio": -0.125,
+      "need_human_review": false,
+      "address": "浦东明天华城（三期）390单元16层1601"
+    },
+    {
+      "title": "繁荣华庭3居室-南卧",
+      "district": "浦东",
+      "rent_type": "合租",
+      "area": 10.0,
+      "rooms": 3,
+      "listed_price": 1430.0,
+      "pred_price": 1549.6,
+      "advice": "价格合理",
+      "price_gap_ratio": -0.077,
+      "need_human_review": false,
+      "address": "浦东周浦繁荣华庭25号楼0单元第12层1204"
+    },
+    {
+      "title": "锦绣华都3居室-南卧",
+      "district": "浦东",
+      "rent_type": "合租",
+      "area": 11.55,
+      "rooms": 3,
+      "listed_price": 1790.0,
+      "pred_price": 1781.3,
+      "advice": "价格合理",
+      "price_gap_ratio": 0.005,
+      "need_human_review": false,
+      "address": "浦东新区三林锦绣华都31号楼31单元第07层0702"
+    }
+  ],
+  "safety_note": "预测基于历史公开挂牌数据，不等于当前成交价；签约前请人工核验实地条件。"
+}

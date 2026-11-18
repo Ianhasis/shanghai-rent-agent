@@ -1,0 +1,271 @@
+{
+  "model_metrics": {
+    "n_total": 18121,
+    "n_train_fit": 11596,
+    "n_valid": 2900,
+    "n_test": 3625,
+    "features_num": [
+      "area",
+      "rooms",
+      "halls",
+      "has_metro",
+      "lng",
+      "lat"
+    ],
+    "features_cat": [
+      "orient",
+      "district"
+    ],
+    "models": {
+      "LinearRegression": {
+        "valid": {
+          "MAE": 2288.713898142837,
+          "RMSE": 3296.8919926348835,
+          "R2": 0.6723886936828043,
+          "MAPE_%": 33.12465001307938
+        },
+        "test": {
+          "MAE": 2244.934693255985,
+          "RMSE": 3205.7660085581433,
+          "R2": 0.6952089282513929,
+          "MAPE_%": 33.70803340875283
+        }
+      },
+      "Ridge": {
+        "valid": {
+          "MAE": 2288.2602817065135,
+          "RMSE": 3296.7745502054768,
+          "R2": 0.6724120337148776,
+          "MAPE_%": 33.11780569415618
+        },
+        "test": {
+          "MAE": 2244.557761857817,
+          "RMSE": 3205.8803384389016,
+          "R2": 0.6951871878322982,
+          "MAPE_%": 33.69772963132492
+        }
+      },
+      "Lasso": {
+        "valid": {
+          "MAE": 2286.3770280177746,
+          "RMSE": 3296.5272331262304,
+          "R2": 0.672461181789082,
+          "MAPE_%": 33.08178610353449
+        },
+        "test": {
+          "MAE": 2243.332443761031,
+          "RMSE": 3206.6134498804963,
+          "R2": 0.6950477644684505,
+          "MAPE_%": 33.661715878319555
+        }
+      }
+    },
+    "baseline": {
+      "name": "median_unit_price_by_rent_type * area",
+      "test": {
+        "MAE": 2968.59133031916,
+        "RMSE": 4256.873422997862,
+        "R2": 0.4625722651164387,
+        "MAPE_%": 42.68549100209391
+      }
+    },
+    "selected_model": "Lasso"
+  },
+  "task_completion_rate": 1.0,
+  "task_results": [
+    {
+      "task": "整租_闵行_预算6500",
+      "ok": true,
+      "message": "找到 1463 套房源，返回 Top-5。"
+    },
+    {
+      "task": "整租_宝山_预算6500",
+      "ok": true,
+      "message": "找到 1746 套房源，返回 Top-5。"
+    },
+    {
+      "task": "整租_黄浦_预算6500",
+      "ok": true,
+      "message": "找到 393 套房源，返回 Top-5。 存在高偏差报价，建议人工确认后再联系房东。"
+    },
+    {
+      "task": "整租_浦东_预算6500",
+      "ok": true,
+      "message": "找到 901 套房源，返回 Top-5。"
+    },
+    {
+      "task": "整租_嘉定_预算6500",
+      "ok": true,
+      "message": "找到 856 套房源，返回 Top-5。 存在高偏差报价，建议人工确认后再联系房东。"
+    },
+    {
+      "task": "边界_预算过低",
+      "ok": true,
+      "message": "无匹配房源：请放宽预算、区域或面积约束。"
+    },
+    {
+      "task": "整租_高预算",
+      "ok": true,
+      "message": "找到 1859 套房源，返回 Top-5。"
+    },
+    {
+      "task": "边界_未知区域",
+      "ok": true,
+      "message": "无匹配房源：请放宽预算、区域或面积约束。"
+    }
+  ],
+  "ablation": {
+    "ablation_rows": [
+      {
+        "task": "整租_闵行_预算6500",
+        "with_model_ok": true,
+        "without_model_ok": true,
+        "with_model_matched": 1463,
+        "without_model_matched": 1463,
+        "fair_or_cheap_ratio_top": 1.0,
+        "review_flagged": false
+      },
+      {
+        "task": "整租_宝山_预算6500",
+        "with_model_ok": true,
+        "without_model_ok": true,
+        "with_model_matched": 1746,
+        "without_model_matched": 1746,
+        "fair_or_cheap_ratio_top": 1.0,
+        "review_flagged": false
+      },
+      {
+        "task": "整租_黄浦_预算6500",
+        "with_model_ok": true,
+        "without_model_ok": true,
+        "with_model_matched": 393,
+        "without_model_matched": 393,
+        "fair_or_cheap_ratio_top": 0.4,
+        "review_flagged": true
+      },
+      {
+        "task": "整租_浦东_预算6500",
+        "with_model_ok": true,
+        "without_model_ok": true,
+        "with_model_matched": 901,
+        "without_model_matched": 901,
+        "fair_or_cheap_ratio_top": 0.8,
+        "review_flagged": false
+      },
+      {
+        "task": "整租_嘉定_预算6500",
+        "with_model_ok": true,
+        "without_model_ok": true,
+        "with_model_matched": 856,
+        "without_model_matched": 856,
+        "fair_or_cheap_ratio_top": 0.0,
+        "review_flagged": true
+      },
+      {
+        "task": "边界_预算过低",
+        "with_model_ok": false,
+        "without_model_ok": false,
+        "with_model_matched": 0,
+        "without_model_matched": 0,
+        "fair_or_cheap_ratio_top": 0.0,
+        "review_flagged": true
+      },
+      {
+        "task": "整租_高预算",
+        "with_model_ok": true,
+        "without_model_ok": true,
+        "with_model_matched": 1859,
+        "without_model_matched": 1859,
+        "fair_or_cheap_ratio_top": 1.0,
+        "review_flagged": false
+      }
+    ]
+  },
+  "failure_cases": [
+    {
+      "title": "秀水苑，人气房源，新鲜挂牌，地铁沿线",
+      "district": "黄浦",
+      "rent_type": "整租",
+      "area": 94.0,
+      "price": 3090.0,
+      "pred_price": 13905.640914147289,
+      "pct_error": 350.0207415581646,
+      "possible_reason": "特征不足/区域细分粗糙/特殊装修或楼盘溢价未建模"
+    },
+    {
+      "title": "白玉兰家园，人气房源，有爱有家，改善住房",
+      "district": "黄浦",
+      "rent_type": "整租",
+      "area": 107.0,
+      "price": 3360.0,
+      "pred_price": 13991.964075253209,
+      "pct_error": 316.42750223967886,
+      "possible_reason": "特征不足/区域细分粗糙/特殊装修或楼盘溢价未建模"
+    },
+    {
+      "title": "惠南小城，温馨之家，低区出入方便，上门实勘",
+      "district": "浦东",
+      "rent_type": "整租",
+      "area": 60.0,
+      "price": 1800.0,
+      "pred_price": 6942.017786343765,
+      "pct_error": 285.6676547968758,
+      "possible_reason": "特征不足/区域细分粗糙/特殊装修或楼盘溢价未建模"
+    },
+    {
+      "title": "雅士公寓4居室 01卧",
+      "district": "黄浦",
+      "rent_type": "整租",
+      "area": 140.0,
+      "price": 4390.0,
+      "pred_price": 16774.37136953063,
+      "pct_error": 282.1041314243879,
+      "possible_reason": "特征不足/区域细分粗糙/特殊装修或楼盘溢价未建模"
+    },
+    {
+      "title": "东晖花苑3居室 02卧",
+      "district": "黄浦",
+      "rent_type": "整租",
+      "area": 90.0,
+      "price": 3360.0,
+      "pred_price": 12726.3341814044,
+      "pct_error": 278.75994587513094,
+      "possible_reason": "特征不足/区域细分粗糙/特殊装修或楼盘溢价未建模"
+    },
+    {
+      "title": "安顺小区3居室 03卧",
+      "district": "长宁",
+      "rent_type": "整租",
+      "area": 67.0,
+      "price": 2290.0,
+      "pred_price": 8209.85944305997,
+      "pct_error": 258.5091459851515,
+      "possible_reason": "特征不足/区域细分粗糙/特殊装修或楼盘溢价未建模"
+    },
+    {
+      "title": "徐汇御景苑3居室 01卧",
+      "district": "徐汇",
+      "rent_type": "整租",
+      "area": 106.0,
+      "price": 3330.0,
+      "pred_price": 11910.410082796105,
+      "pct_error": 257.66997245633945,
+      "possible_reason": "特征不足/区域细分粗糙/特殊装修或楼盘溢价未建模"
+    },
+    {
+      "title": "秋月枫舍，低区出入方便，温馨之家，享受好房",
+      "district": "静安",
+      "rent_type": "整租",
+      "area": 101.0,
+      "price": 3190.0,
+      "pred_price": 11307.736321607706,
+      "pct_error": 254.47449284036696,
+      "possible_reason": "特征不足/区域细分粗糙/特殊装修或楼盘溢价未建模"
+    }
+  ],
+  "notes": [
+    "定量指标以测试集 MAE/RMSE/R2/MAPE 为主。",
+    "消融：关闭回归模型后仅能规则筛选，无法给出偏贵/合理判断。",
+    "失败案例取测试集百分比误差最大的样本，用于误差分析。"
+  ]
+}
