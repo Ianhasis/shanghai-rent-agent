@@ -1,4 +1,4 @@
-"""生成期末报告 Word：论证优先，插图服务于叙述。"""
+"""生成期末报告 Word（依据本科毕业论文常用规范：客观陈述、先文后图）。"""
 from __future__ import annotations
 
 import re
@@ -46,40 +46,35 @@ def add_para(doc, text, first_line_indent=True, size=12):
 
 
 def add_fig(doc, path: Path, caption: str, width_in: float = 5.5):
-    """只放图与图题；分析写在前后正文，避免“一图一段堆结论”。"""
     if not path.exists():
         add_para(doc, f"（缺少图片文件：{path.name}）", first_line_indent=False)
     else:
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.paragraph_format.space_before = Pt(4)
+        p.paragraph_format.space_before = Pt(6)
         p.paragraph_format.space_after = Pt(2)
         p.add_run().add_picture(str(path), width=Inches(width_in))
     c = doc.add_paragraph()
     c.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    c.paragraph_format.space_after = Pt(8)
+    c.paragraph_format.space_after = Pt(10)
     set_run_font(c.add_run(caption), "宋体", 10.5)
 
 
-def add_shot_placeholder(doc, fig_no: str, title: str, howto: str):
+def add_shot_placeholder(doc, fig_no: str, title: str):
     box = doc.add_paragraph()
     box.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    box.paragraph_format.space_before = Pt(6)
+    box.paragraph_format.space_before = Pt(8)
     box.paragraph_format.space_after = Pt(2)
     set_run_font(
-        box.add_run(f"【待补充截图】{fig_no} {title}"),
+        box.add_run(f"【待补充截图】"),
         "宋体",
         10.5,
         True,
         RGBColor(0x66, 0x66, 0x66),
     )
-    tip = doc.add_paragraph()
-    tip.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    tip.paragraph_format.space_after = Pt(4)
-    set_run_font(tip.add_run(howto), "宋体", 9, False, RGBColor(0x88, 0x88, 0x88))
     c = doc.add_paragraph()
     c.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    c.paragraph_format.space_after = Pt(8)
+    c.paragraph_format.space_after = Pt(10)
     set_run_font(c.add_run(f"{fig_no} {title}"), "宋体", 10.5)
 
 
@@ -136,7 +131,7 @@ def add_metrics_table(doc: Document):
     cap = doc.add_paragraph()
     cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
     cap.paragraph_format.space_before = Pt(4)
-    cap.paragraph_format.space_after = Pt(8)
+    cap.paragraph_format.space_after = Pt(10)
     set_run_font(cap.add_run("表1 测试集主要定量结果"), "宋体", 10.5)
 
 
@@ -149,134 +144,78 @@ def main():
         s.right_margin = Cm(2.54)
 
     build_cover(doc)
+    s1, s2, s3, s4, s5, s6 = SECTIONS
 
     # 一
-    add_heading_cn(doc, SECTIONS[0][0])
-    for p in SECTIONS[0][1]:
+    add_heading_cn(doc, s1[0])
+    for p in s1[1]:
         add_para(doc, p)
 
-    # 二
-    add_heading_cn(doc, SECTIONS[1][0])
-    add_para(doc, SECTIONS[1][1][0])
-    add_para(
-        doc,
-        "图1给出对应的总体结构：网页入口将任务交给编排器，编排器再调度数据工具、回归模型与建议模块，"
-        "并在必要时进入人工确认。该图要说明的不是界面装饰，而是“谁调用谁、失败时如何退出”。",
-    )
+    # 二：段1 → 段2+图1 → 段3前半+图2 → 段3后半+图3 → 段4
+    add_heading_cn(doc, s2[0])
+    add_para(doc, s2[1][0])
+    add_para(doc, s2[1][1])
     add_fig(doc, RES / "fig_architecture_cn.png", "图1 系统总体结构", 5.9)
-    add_para(doc, SECTIONS[1][1][1])
-    add_para(
-        doc,
-        "把上述逻辑展开为时间顺序，即得到图2的任务流程。与结构图不同，流程图强调步骤先后："
-        "先形成可执行参数，再检索与估价，最后生成建议并做安全检查。缺参追问、无匹配提示与高偏差复核，"
-        "都是这条链路上的失败分支，而不是事后附加说明。",
-    )
-    add_fig(doc, RES / "fig_workflow_cn.png", "图2 Agent 任务执行流程", 6.0)
-    add_para(doc, SECTIONS[1][1][2])
-    add_para(
-        doc,
-        "在用户侧，上述设计表现为两类任务与两种找房入口。图3用于展示任务入口是否清晰；"
-        "完整运行结果将在实验部分与评价问题一并给出，以免在方案章过早陷入界面细节。",
-    )
-    add_shot_placeholder(
-        doc,
-        "图3",
-        "用户任务入口界面",
-        "截取首页：帮我找房 / 判断这套房贵不贵，以及一句话找房 / 精确筛选。",
-    )
+    # 段3含图2与图3引用：拆成两段以便插图
+    p3 = s2[1][2]
+    split_marker = "用户任务入口界面如图3所示"
+    if split_marker in p3:
+        before, after = p3.split(split_marker, 1)
+        add_para(doc, before.strip())
+        add_fig(doc, RES / "fig_workflow_cn.png", "图2 Agent 任务执行流程", 6.0)
+        add_para(doc, split_marker + after)
+        add_shot_placeholder(doc, "图3", "用户任务入口界面")
+    else:
+        add_para(doc, p3)
+        add_fig(doc, RES / "fig_workflow_cn.png", "图2 Agent 任务执行流程", 6.0)
+        add_shot_placeholder(doc, "图3", "用户任务入口界面")
+    add_para(doc, s2[1][3])
 
     # 三
-    add_heading_cn(doc, SECTIONS[2][0])
-    add_para(doc, SECTIONS[2][1][0])
-    add_para(doc, SECTIONS[2][1][1])
-    add_para(
-        doc,
-        "在进入训练细节前，先确认数据工具侧是否具备按区域筛选的条件。图4显示清洗后样本的行政区分布："
-        "多区覆盖使区域约束可执行，但分布不均也预示后续分区误差可能不同。图5则给出划分方案，"
-        "保证验证与测试职责分离，避免把选模结果误当作最终泛化成绩。",
-    )
+    add_heading_cn(doc, s3[0])
+    add_para(doc, s3[1][0])
+    add_para(doc, s3[1][1])
+    add_para(doc, s3[1][2])
     add_fig(doc, RES / "fig_district_cn.png", "图4 清洗后房源的行政区分布", 5.8)
     add_fig(doc, RES / "fig_split_cn.png", "图5 训练集、验证集与测试集划分", 4.3)
-    add_para(doc, SECTIONS[2][1][2])
+    add_para(doc, s3[1][3])
 
     # 四
-    add_heading_cn(doc, SECTIONS[3][0])
-    for p in SECTIONS[3][1]:
+    add_heading_cn(doc, s4[0])
+    for p in s4[1]:
         add_para(doc, p)
 
-    # 五 —— 论证主线
-    add_heading_cn(doc, SECTIONS[4][0])
-    add_para(doc, SECTIONS[4][1][0])
-
-    add_para(doc, SECTIONS[4][1][1])
+    # 五
+    add_heading_cn(doc, s5[0])
+    add_para(doc, s5[1][0])
+    add_para(doc, s5[1][1])
     add_metrics_table(doc)
-    add_para(
-        doc,
-        "为把表1中的对比关系可视化，图6聚焦绝对误差，图7同时给出拟合优度与相对误差，图8将 Lasso 与基线并置。"
-        "三者共同支撑同一判断：多特征回归优于单价外推；同时相对误差仍高，因而不能取消复核。",
-    )
+    add_para(doc, s5[1][2])
     add_fig(doc, RES / "fig_mae_cn.png", "图6 测试集平均绝对误差（MAE）对照", 5.6)
-    add_fig(doc, RES / "fig_r2_mape_cn.png", "图7 测试集 R² 与 MAPE", 5.8)
+    add_fig(doc, RES / "fig_r2_mape_cn.png", "图7 测试集决定系数（R²）与平均绝对百分比误差（MAPE）", 5.8)
     add_fig(doc, RES / "fig_metrics_compare_cn.png", "图8 Lasso 与基线关键指标对照", 5.6)
 
-    add_para(doc, SECTIONS[4][1][2])
-    add_para(
-        doc,
-        "对应地，图9用于观察拟合的主体趋势与尾部离散，图10用于观察残差是否对称、是否存在长尾；"
-        "图12与图13把误差分解到居室与行政区切片，图14给出高偏差个案。这样，从“平均变好”推进到“哪里仍然不好”，"
-        "再自然引出安全策略，而不是先摆图后补理由。",
-    )
+    add_para(doc, s5[1][3])
     add_fig(doc, RES / "fig_pred_vs_true_cn.png", "图9 预测值与挂牌价对照（密度图）", 4.7)
     add_fig(doc, RES / "fig_residual_cn.png", "图10 测试集残差分布", 5.5)
-
-    add_para(doc, SECTIONS[4][1][3])
-    add_fig(doc, RES / "fig_feature_cn.png", "图11 Lasso 特征影响（绝对值前十）", 5.6)
-
-    add_para(
-        doc,
-        "在确认特征方向大体合理后，仍需检查误差的结构性差异与失败形态，否则平均指标会掩盖薄弱输入。",
-    )
     add_fig(doc, RES / "fig_error_by_rooms_cn.png", "图12 不同居室条件下的平均绝对误差", 5.3)
     add_fig(doc, RES / "fig_error_by_district_cn.png", "图13 平均误差较高的行政区（前八）", 5.5)
     add_fig(doc, RES / "fig_failure_cn.png", "图14 高百分比误差失败案例", 5.6)
 
-    add_para(doc, SECTIONS[4][1][4])
-    add_para(
-        doc,
-        "图15给出可复现样例通过情况，图16给出关闭模型后的消融对照。若消融后建议能力明显下降，"
-        "即可证明回归组件进入了任务闭环。随后用端到端截图核对：自然语言找房、单套判断与边界失败是否都能按设计工作。",
-    )
+    add_para(doc, s5[1][4])
+    add_fig(doc, RES / "fig_feature_cn.png", "图11 Lasso 特征影响（绝对值前十）", 5.6)
+
+    add_para(doc, s5[1][5])
     add_fig(doc, RES / "fig_sample_tests_cn.png", "图15 Agent 可复现样例测试结果", 5.5)
     if (RES / "fig_ablation_cn.png").exists():
         add_fig(doc, RES / "fig_ablation_cn.png", "图16 消融实验：启用与关闭回归模型", 5.6)
-
-    add_para(
-        doc,
-        "完整运行证据用于把“指标—误差—消融”拉回到真实交互。图17至图19分别对应一句话找房、单套判断与边界处理；"
-        "它们不是额外展示，而是对第三问（模型是否进入流程、失败是否可处置）的实例化核查。",
-    )
-    add_shot_placeholder(
-        doc,
-        "图17",
-        "一句话找房完整运行结果",
-        "输入如“闵行预算6000两居，帮我看看划不划算”，截取结论与至少两套房源卡片。",
-    )
-    add_shot_placeholder(
-        doc,
-        "图18",
-        "单套判断运行结果",
-        "在“判断这套房贵不贵”中完成一次判断并截取结果区。",
-    )
-    add_shot_placeholder(
-        doc,
-        "图19",
-        "异常或边界情形处理",
-        "例如预算过低导致无匹配，或提示核实的界面。",
-    )
+    add_shot_placeholder(doc, "图17", "一句话找房完整运行结果")
+    add_shot_placeholder(doc, "图18", "单套判断运行结果")
+    add_shot_placeholder(doc, "图19", "异常或边界情形处理结果")
 
     # 六
-    add_heading_cn(doc, SECTIONS[5][0])
-    for p in SECTIONS[5][1]:
+    add_heading_cn(doc, s6[0])
+    for p in s6[1]:
         add_para(doc, p)
 
     add_heading_cn(doc, "七、参考文献")
@@ -332,9 +271,12 @@ def main():
         doc.save(DESKTOP_OUT)
         print("saved", DESKTOP_OUT)
     except Exception as e:
-        alt = Path(r"c:\Users\Lenovo\Desktop") / "机器学习期末报告_沪租估Agent_论证版.docx"
-        doc.save(alt)
-        print("desktop locked, saved", alt, "err", e)
+        alt = Path(r"c:\Users\Lenovo\Desktop") / "机器学习期末报告_沪租估Agent_规范版.docx"
+        try:
+            doc.save(alt)
+            print("desktop locked, saved", alt, "err", e)
+        except Exception as e2:
+            print("desktop save failed:", e2)
 
     texts = [p.text for p in doc.paragraphs]
     body = []
@@ -348,11 +290,10 @@ def main():
             continue
         if re.match(r"^图\d+", t) or re.match(r"^表\d+", t):
             continue
-        if t.startswith("【待补充截图】") or t.startswith("截取"):
+        if t.startswith("【待补充截图】"):
             continue
         body.append(t)
-    cn = len(re.findall(r"[\u4e00-\u9fff]", "\n".join(body)))
-    print("body_chinese_chars_approx", cn)
+    print("body_chinese_chars_approx", len(re.findall(r"[\u4e00-\u9fff]", "\n".join(body))))
     print("images", sum(1 for r in doc.part.rels.values() if "image" in r.reltype))
 
 
