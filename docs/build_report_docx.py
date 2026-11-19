@@ -10,7 +10,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
 from docx.oxml.ns import qn
 from docx.shared import Cm, Inches, Pt, RGBColor
 
-from report_body_text import SECTIONS
+from report_body_text import REFERENCES, SECTIONS
 
 ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / "results"
@@ -35,14 +35,27 @@ def add_heading_cn(doc, text, level=1):
         set_run_font(run, "黑体", 16 if level == 1 else 13, True)
 
 
-def add_para(doc, text, first_line_indent=True, size=12):
+def add_para(doc, text, first_line_indent=True, size=12, cite_superscript=True):
+    """正文段落；方括号文献序号按 GB/T 7714 习惯设为上角标。"""
     p = doc.add_paragraph()
     pf = p.paragraph_format
     pf.line_spacing_rule = WD_LINE_SPACING.ONE_POINT_FIVE
     pf.space_after = Pt(6)
     if first_line_indent:
         pf.first_line_indent = Cm(0.74)
-    set_run_font(p.add_run(text), "宋体", size)
+    if not cite_superscript:
+        set_run_font(p.add_run(text), "宋体", size)
+        return p
+    parts = re.split(r"(\[[0-9,\-\s]+\])", text)
+    for part in parts:
+        if not part:
+            continue
+        run = p.add_run(part)
+        if re.fullmatch(r"\[[0-9,\-\s]+\]", part):
+            set_run_font(run, "宋体", 9)
+            run.font.superscript = True
+        else:
+            set_run_font(run, "宋体", size)
     return p
 
 
@@ -230,22 +243,14 @@ def main():
         add_para(doc, p)
 
     add_heading_cn(doc, "七、参考文献")
-    for r in [
-        "[1] Pedregosa F, et al. Scikit-learn: Machine Learning in Python. JMLR, 2011. https://scikit-learn.org/",
-        "[2] Junru-Sheng. lianjia_Crawler（上海链家租房数据整理）. GitHub. https://github.com/Junru-Sheng/lianjia_Crawler",
-        "[3] Streamlit Inc. Streamlit Documentation. https://docs.streamlit.io/",
-        "[4] 李航. 统计学习方法. 清华大学出版社.",
-        "[5] Hastie T, Tibshirani R, Friedman J. The Elements of Statistical Learning. Springer.",
-        "[6] 《机器学习》课程讲义：回归、正则化、模型评估与实验设计相关内容.",
-        "[7] scikit-learn User Guide: Linear Models. https://scikit-learn.org/stable/modules/linear_model.html",
-    ]:
-        add_para(doc, r, first_line_indent=False)
+    for r in REFERENCES:
+        add_para(doc, r, first_line_indent=False, cite_superscript=False)
 
     add_heading_cn(doc, "附录 A 复用组件清单与许可证说明")
     add_para(
         doc,
-        "scikit-learn 1.6.0（BSD-3-Clause）[1][7]；pandas 2.2.3；numpy 2.4.6；joblib 1.4.2；matplotlib 3.10.0；"
-        "streamlit 1.67.0（Apache-2.0）[3]；上海链家租房数据（Junru-Sheng/lianjia_Crawler，学习研究用途）[2]；"
+        "scikit-learn 1.6.0（BSD-3-Clause）[4-5]；pandas 2.2.3；numpy 2.4.6；joblib 1.4.2；matplotlib 3.10.0；"
+        "streamlit 1.67.0（Apache-2.0）[6]；上海链家租房数据（Junru-Sheng/lianjia_Crawler，学习研究用途）[7]；"
         "自研模块：goal_parser、rent_filter_skill、RentAgent。"
         "详见 docs/03_复用组件清单.md、docs/04_sklearn深入分析与核验.md、data/DATA_SOURCE.md。"
         "公开仓库未提交密钥。",
