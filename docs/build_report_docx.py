@@ -172,14 +172,14 @@ def main():
         add_shot_placeholder(doc, "图3", "用户任务入口界面")
     add_para(doc, s2[1][3])
 
-    # 三
+    # 三：问题→数据→特征→模型→划分(图4/5)→接入任务
     add_heading_cn(doc, s3[0])
-    add_para(doc, s3[1][0])
-    add_para(doc, s3[1][1])
-    add_para(doc, s3[1][2])
+    for i in range(5):
+        add_para(doc, s3[1][i])
     add_fig(doc, RES / "fig_district_cn.png", "图4 清洗后房源的行政区分布", 5.8)
     add_fig(doc, RES / "fig_split_cn.png", "图5 训练集、验证集与测试集划分", 4.3)
-    add_para(doc, s3[1][3])
+    add_para(doc, s3[1][5])
+    add_para(doc, s3[1][6])
 
     # 四
     add_heading_cn(doc, s4[0])
