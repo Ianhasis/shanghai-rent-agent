@@ -358,10 +358,17 @@ class RentAgent:
 
         gap = float(one["price_gap_ratio"])
         advice = str(one["advice"])
+        advice_cn = {
+            "价格合理": "价格比较正常",
+            "偏贵": "可能偏贵",
+            "偏便宜": "相对划算",
+            "显著偏贵": "明显偏贵",
+            "显著偏低(需核验真伪/条件遗漏)": "低得有点异常，建议核实",
+        }.get(advice, advice)
         conclusion = (
             f"这套在{dist}、约{features['area']:.0f}㎡：房东要价 {one['listed_price']:.0f} 元/月，"
-            f"参考公允价约 {one['pred_price']:.0f} 元/月，相差 {abs(gap)*100:.1f}%。"
-            f"结论：{advice}。"
+            f"参考合理价大约 {one['pred_price']:.0f} 元/月，相差 {abs(gap)*100:.1f}%。"
+            f"{advice_cn}。"
             + ("建议你再核实后再决定。" if one["need_human_review"] else "可以继续约看，签约前仍建议实地确认。")
         )
         trace.append("⑤对比挂牌与预测，生成溢价判断")

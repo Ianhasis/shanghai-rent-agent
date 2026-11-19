@@ -70,7 +70,6 @@ html, body, [class*="css"]  {
   letter-spacing: 0.04em;
   color: var(--muted);
   margin: 0 0 0.45rem;
-  text-transform: uppercase;
 }
 .panel-title {
   font-family: "Fraunces", serif;
@@ -78,20 +77,6 @@ html, body, [class*="css"]  {
   margin: 0 0 0.3rem;
 }
 .hint { color: var(--muted); font-size: 0.9rem; margin: 0 0 0.85rem; }
-.step-box {
-  background: rgba(255,255,255,0.88);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 0.75rem 0.9rem;
-  margin: 0.7rem 0 1rem;
-}
-.step-box p { margin: 0.2rem 0; font-size: 0.92rem; color: #243447; }
-.step-title {
-  font-weight: 700;
-  font-size: 0.88rem;
-  color: var(--accent);
-  margin: 0 0 0.35rem !important;
-}
 .conclusion {
   background: rgba(15, 118, 110, 0.08);
   border: 1px solid rgba(15, 118, 110, 0.22);
@@ -144,8 +129,7 @@ div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
 
 
 @st.cache_resource
-def get_agent(_version: str = "goal-v1"):
-    # _version 用于在升级 Agent 能力后强制刷新缓存实例
+def get_agent(_version: str = "ux-v2"):
     agent = RentAgent(top_k=8)
     agent.load()
     return agent
@@ -172,23 +156,10 @@ def advice_badge(advice: str) -> str:
     return f'<span class="badge {cls}">{text}</span>'
 
 
-def render_trace(out: AgentOutput):
-    if not out.planner_trace and not out.steps:
-        return
-    lines = out.planner_trace or [
-        f"[{s.status.value}] {s.name}：{s.detail or s.purpose}" for s in out.steps
-    ]
-    html = ['<div class="step-box"><p class="step-title">Agent 执行过程</p>']
-    for line in lines:
-        html.append(f"<p>{line}</p>")
-    html.append("</div>")
-    st.markdown("\n".join(html), unsafe_allow_html=True)
-
-
-def render_conclusion(text: str):
+def render_summary(text: str):
     if not text:
         return
-    st.markdown(f'<div class="conclusion"><b>结论</b><br/>{text}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="conclusion">{text}</div>', unsafe_allow_html=True)
 
 
 def render_listings(out: AgentOutput):
@@ -212,7 +183,7 @@ def render_listings(out: AgentOutput):
         return
 
     st.markdown('<div class="result-head"><h2>为你找到的房源</h2></div>', unsafe_allow_html=True)
-    st.write(f"共找到符合条件的候选，下面先给你看 {len(out.items)} 套。")
+    st.write(f"下面先给你看 {len(out.items)} 套更合适的。")
     if out.need_human_review:
         st.warning("有的房价差得比较多，建议你再确认一下再联系。")
 
@@ -238,8 +209,8 @@ def render_listings(out: AgentOutput):
 
     with st.expander("这是怎么帮我判断的？"):
         st.write(
-            "Agent 先理解你的目标并抽取条件，再调用房源库检索，接着用回归模型估计公允价，"
-            "最后和挂牌价对比给出建议。缺关键信息时会先追问。"
+            "先按你的预算和偏好筛出候选，再估算每套房大概值多少钱，"
+            "最后和房东要价对比，优先给你更合适的。信息不够时会先问你一句。"
         )
     st.caption("参考价仅供参考，不代表当前成交价；看房签约前请实地确认。")
 
@@ -250,19 +221,19 @@ def main():
         """
         <div class="hero">
           <p class="brand">沪租估</p>
-          <p class="tagline">说一句目标，或精确筛选；我会自己拆任务、查房源、估公允价并给出结论。</p>
+          <p class="tagline">在上海找房时，帮你按预算筛房，并看看挂牌价正不正常。</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    agent = get_agent("goal-v1")
+    agent = get_agent("ux-v2")
     listings = agent.listings
     assert listings is not None
     districts = sorted([d for d in listings["district"].dropna().unique() if d != "未知"])
     default_dist = "浦东" if "浦东" in districts else districts[0]
 
-    st.markdown('<p class="task-label">选择任务</p>', unsafe_allow_html=True)
+    st.markdown('<p class="task-label">你想做什么</p>', unsafe_allow_html=True)
     task = st.radio(
         "选择任务",
         ["帮我找房", "判断这套房贵不贵"],
@@ -274,7 +245,7 @@ def main():
         with st.container(border=True):
             st.markdown('<p class="panel-title">找房方式</p>', unsafe_allow_html=True)
             st.markdown(
-                '<p class="hint">两种入口最终都走同一套 Agent：理解目标 → 调度工具 → 给出结论。</p>',
+                '<p class="hint">可以说一句话，也可以自己勾选条件。</p>',
                 unsafe_allow_html=True,
             )
             find_mode = st.radio(
@@ -294,15 +265,14 @@ def main():
                     placeholder="例如：浦东 5500 以内，想找 50-70㎡ 的两室",
                 )
                 top_k = st.slider("想看几套", 3, 12, 8)
-                go = st.button("让 Agent 开始", width="stretch")
+                go = st.button("开始帮我找", width="stretch")
                 if go:
-                    with st.spinner("Agent 正在理解目标并调度工具…"):
+                    with st.spinner("正在按你的需求找房并比较价格…"):
                         out = agent.run_from_goal(goal, top_k=int(top_k))
-                    render_trace(out)
                     if out.need_clarify:
                         st.warning(out.clarify_question or "还需要补充一点信息。")
                         return
-                    render_conclusion(out.conclusion)
+                    render_summary(out.conclusion)
                     render_listings(out)
                 return
 
@@ -324,11 +294,11 @@ def main():
             with c5:
                 top_k = st.slider("想看几套", 3, 12, 8, key="filter_topk")
 
-            go = st.button("开始帮我找", width="stretch")
+            go = st.button("开始帮我找", width="stretch", key="filter_go")
             if not go:
                 return
 
-            with st.spinner("Agent 正在按条件检索并估价…"):
+            with st.spinner("正在按你的条件找房并比较价格…"):
                 out = agent.run(
                     budget=float(budget),
                     district=None if district == "不限" else district,
@@ -338,24 +308,16 @@ def main():
                     use_model=True,
                     top_k=int(top_k),
                 )
-            out.planner_trace = [
-                "①理解目标：精确筛选模式（用户已给出结构化条件）",
-                f"②抽取参数：预算={budget}，区域={district}，面积={min_area}-{max_area}，居室={rooms_opt}",
-                "③调用数据工具：硬约束检索房源库",
-                "④调用回归模型：预测公允租金并比较挂牌价",
-                "⑤整合结论：" + (out.conclusion or RentAgent._search_conclusion(out)),
-            ]
             out.conclusion = RentAgent._search_conclusion(out)
             out.intent = "search"
-            render_trace(out)
-            render_conclusion(out.conclusion)
+            render_summary(out.conclusion)
             render_listings(out)
             return
 
     with st.container(border=True):
         st.markdown('<p class="panel-title">判断这套房贵不贵</p>', unsafe_allow_html=True)
         st.markdown(
-            '<p class="hint">也可以一句话，例如：浦东 65㎡ 两室要价 7200，贵不贵？</p>',
+            '<p class="hint">可以说一句话，也可以直接填写房子信息。</p>',
             unsafe_allow_html=True,
         )
         val_mode = st.radio(
@@ -374,15 +336,14 @@ def main():
                 label_visibility="collapsed",
                 key="val_goal",
             )
-            ask = st.button("让 Agent 判断", width="stretch")
+            ask = st.button("帮我判断", width="stretch", key="val_nl_go")
             if ask:
-                with st.spinner("Agent 正在估价并对比…"):
+                with st.spinner("正在对比参考价…"):
                     out = agent.run_from_goal(goal, top_k=3)
-                render_trace(out)
                 if out.need_clarify:
                     st.warning(out.clarify_question or "还需要补充一点信息。")
                     return
-                render_conclusion(out.conclusion)
+                render_summary(out.conclusion)
                 render_listings(out)
             return
 
@@ -407,11 +368,11 @@ def main():
         with c6:
             metro = st.checkbox("附近有地铁", value=True)
 
-        ask = st.button("帮我判断", width="stretch")
+        ask = st.button("帮我判断", width="stretch", key="val_form_go")
         if not ask:
             return
 
-        with st.spinner("Agent 正在对比参考价…"):
+        with st.spinner("正在对比参考价…"):
             one = agent.valuate_one(
                 {
                     "area": float(area),
@@ -448,21 +409,14 @@ def main():
                     "address": "",
                 }
             ],
-            planner_trace=[
-                "①理解目标：单套判断（结构化填写）",
-                f"②抽取参数：区域={dist}，面积={area}，要价={listed}",
-                "③调用回归模型：预测公允月租",
-                "④对比挂牌与预测，生成结论",
-            ],
             conclusion=(
                 f"这套在{dist}、约{area:.0f}㎡：房东要价 {one['listed_price']:.0f} 元/月，"
-                f"参考公允价约 {one['pred_price']:.0f} 元/月，相差 {abs(one['price_gap_ratio'])*100:.1f}%。"
-                f"结论：{friendly_advice(one['advice'])}。"
+                f"参考合理价大约 {one['pred_price']:.0f} 元/月，相差 {abs(one['price_gap_ratio'])*100:.1f}%。"
+                f"{friendly_advice(one['advice'])}。"
             ),
             intent="valuate",
         )
-        render_trace(out)
-        render_conclusion(out.conclusion)
+        render_summary(out.conclusion)
         render_listings(out)
 
 
