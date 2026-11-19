@@ -25,7 +25,7 @@ python run_all.py
 - `skills/rent_filter_skill.py`：筛选与估价建议
 - `src/preprocess.py`、`train.py`、`evaluate.py`：数据与模型
 - `tests/`：测试样例
-- `docs/03_复用组件清单.md`、`docs/04_sklearn深入分析与核验.md`：复用说明
+- `docs/01_复用组件清单.md`、`docs/02_sklearn深入分析与核验.md`：复用说明
 - `data/DATA_SOURCE.md`：数据来源
 
 ## 结果
