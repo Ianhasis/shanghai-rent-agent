@@ -21,10 +21,9 @@ DATA = ROOT / "data" / "processed" / "shanghai_listings.csv"
 
 
 def task_suite(df: pd.DataFrame) -> list[dict]:
-    """构造有代表性的测试任务（含边界）。"""
+    """构造正常查询和边界任务。"""
     districts = df["district"].value_counts().index.tolist()
     tasks = []
-    # 正常任务
     for d in districts[:5]:
         tasks.append(
             {
@@ -36,7 +35,6 @@ def task_suite(df: pd.DataFrame) -> list[dict]:
                 "max_area": 90,
             }
         )
-    # 边界：预算过低
     tasks.append(
         {
             "name": "边界_预算过低",
@@ -47,7 +45,6 @@ def task_suite(df: pd.DataFrame) -> list[dict]:
             "max_area": 80,
         }
     )
-    # 边界：整租高预算
     tasks.append(
         {
             "name": "整租_高预算",
@@ -58,7 +55,6 @@ def task_suite(df: pd.DataFrame) -> list[dict]:
             "max_area": 120,
         }
     )
-    # 边界：不存在区域
     tasks.append(
         {
             "name": "边界_未知区域",
@@ -96,7 +92,6 @@ def run_ablation(listings: pd.DataFrame, model) -> dict:
             max_area=t["max_area"],
             use_model=False,
         )
-        # 模型开启时，候选中“价格合理/偏便宜”占比作为可解释的任务质量代理
         fair_ratio = 0.0
         if r_on.items:
             fair_ratio = np.mean(
@@ -143,7 +138,6 @@ def main() -> None:
     model = joblib.load(MODEL)
     skill = RentFilterSkill(model=model, top_k=5)
 
-    # 任务完成率
     tasks = task_suite(listings)
     task_results = []
     success = 0
@@ -157,7 +151,6 @@ def main() -> None:
             max_area=t["max_area"],
             use_model=True,
         )
-        # 成功定义：有输出；或边界任务正确报告无匹配
         if t["name"].startswith("边界_"):
             ok = (not r.ok) or r.need_human_review
         else:

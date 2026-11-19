@@ -1,1 +1,1 @@
-"""Shanghai rent fairness & listing filter Agent."""
+"""沪租估核心模块。"""

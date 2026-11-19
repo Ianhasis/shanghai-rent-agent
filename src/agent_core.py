@@ -1,12 +1,4 @@
-"""
-端到端 Agent 编排（对齐课程「Agent 项目要求」）。
-
-- 任务入口：校验输入，明确成功判定
-- 任务流程：分步状态（pending/running/done/failed）
-- ML 组件：调用已训练回归模型（经 RentFilterSkill）
-- 工具/数据：连接本地上海房源库
-- 失败与安全：异常输入、无结果、高偏差 -> 人工复核
-"""
+"""Agent 编排：校验输入、连数据、调模型、生成建议、异常时提示人工确认。"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -54,8 +46,6 @@ class AgentOutput:
 
 
 class RentAgent:
-    """上海租房公允估价与筛选 Agent。"""
-
     def __init__(self, top_k: int = 8):
         self.top_k = top_k
         self.listings: pd.DataFrame | None = None
@@ -66,7 +56,7 @@ class RentAgent:
         return [
             Step("任务入口", "接收并校验用户输入（预算/区域/面积等）"),
             Step("连接数据工具", "加载本地上海房源库，核对可用性"),
-            Step("加载 ML 组件", "加载回归模型（Linear/Ridge/Lasso 中验证集最优）"),
+            Step("加载 ML 组件", "加载回归模型（验证集最优）"),
             Step("硬约束筛选", "按预算、区域、面积过滤候选房源"),
             Step("公允租金预测", "对候选调用回归模型推理"),
             Step("建议生成", "比较挂牌价与预测价，输出偏贵/合理/偏便宜"),
@@ -119,7 +109,6 @@ class RentAgent:
             self.top_k = top_k
         steps = self._init_steps()
 
-        # 1. 任务入口校验
         steps[0].status = StepStatus.RUNNING
         errs = self.validate_input(budget, min_area, max_area, district)
         if errs:
@@ -142,7 +131,6 @@ class RentAgent:
             f"area=[{min_area},{max_area}], rooms={rooms or '不限'}"
         )
 
-        # 2-3 加载资源
         steps[1].status = StepStatus.RUNNING
         try:
             if self.listings is None or self.model is None or self.skill is None:
@@ -167,7 +155,6 @@ class RentAgent:
                 success_criteria=self._criteria(False, False, False),
             )
 
-        # 4-6 skill 执行
         steps[3].status = StepStatus.RUNNING
         pool = self.listings.copy()
         if rooms is not None:
@@ -183,7 +170,6 @@ class RentAgent:
             use_model=use_model,
         )
 
-        # 映射 skill steps 到编排状态
         if not result.ok:
             steps[3].status = StepStatus.FAILED
             steps[3].detail = result.message
@@ -216,7 +202,6 @@ class RentAgent:
             steps[5].status = StepStatus.DONE
             steps[5].detail = "仅按价格排序（无公允判断）"
 
-        # 7 安全检查
         steps[6].status = StepStatus.DONE
         high_risk = sum(1 for i in result.items if i.get("need_human_review"))
         steps[6].detail = (
@@ -224,15 +209,11 @@ class RentAgent:
             + ("触发人工复核" if result.need_human_review else "未触发强制复核")
         )
 
-        # 成功判定（文档要求明确判定方式）
         has_items = len(result.items) > 0
         has_advice = use_model and any(
             i.get("advice") not in {None, "", "仅规则筛选(无模型估价)"} for i in result.items
         )
-        # 核心任务成功：返回结果；若启用模型则必须有估价建议
         core_success = has_items and (has_advice if use_model else True)
-        # 安全成功：高影响结果已标记人工复核（有高偏差也不算系统失败）
-        safety_ok = True
 
         return AgentOutput(
             ok=True,
@@ -244,10 +225,10 @@ class RentAgent:
             summary={**result.summary, "rooms": rooms, "high_risk_items": high_risk},
             safety={
                 "reason": "high_deviation" if result.need_human_review else "ok",
-                "note": "预测≠成交价；签约前请人工核验实地与合同。",
+                "note": "预测不等于成交价，签约前请自行核实。",
                 "data_boundary": "历史公开挂牌，可能过时；仅课程原型。",
             },
-            success_criteria=self._criteria(core_success, has_advice if use_model else True, safety_ok),
+            success_criteria=self._criteria(core_success, has_advice if use_model else True, True),
         )
 
     @staticmethod

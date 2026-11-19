@@ -1,33 +1,30 @@
-# 做成在线（别人用链接打开）
+# 部署说明
 
-本地 `localhost` 只有你能开。要让同学/助教点开链接就能用，需要部署到云端。
+本地 `localhost` 只有本机可访问。要让别人点开链接使用，需要部署到云端。
 
-## 推荐：Streamlit Community Cloud（免费）
+## Streamlit Community Cloud
 
-1. 安装 Git，把本项目推到你的 GitHub 仓库  
-2. 打开 https://share.streamlit.io 并用 GitHub 登录  
-3. New app → 选择仓库 → Main file path 填：`app.py`  
-4. 等待构建完成，会得到类似：  
-   `https://xxxx.streamlit.app`
+1. 代码推到 GitHub
+2. 打开 https://share.streamlit.io ，用 GitHub 登录
+3. New app → 选仓库 → Main file path 填 `app.py`
+4. 部署完成后得到 `https://xxxx.streamlit.app`
 
-依赖会读仓库里的 `requirements.txt`。  
-运行时需要的文件：
+依赖读取 `requirements.txt`。运行时需要：
+
 - `app.py`
 - `models/best_model.joblib`
 - `data/processed/shanghai_listings.csv`
 - `skills/`、`src/`
 
+本项目当前在线地址：
+
+https://shanghai-rent-agent-2q76xragwmybw27uqinqt7.streamlit.app/
+
 ## 备选：Hugging Face Spaces
 
-1. 新建 Space，SDK 选 Streamlit  
-2. 上传本项目代码（或连 GitHub）  
-3. 得到 `https://huggingface.co/spaces/你的用户名/空间名`
+新建 Space，SDK 选 Streamlit，连 GitHub 或上传代码即可。
 
 ## 注意
-- 不需要 API Key，也没有密钥要藏  
-- 数据是历史挂牌，页面已有“仅供参考”提示  
-- 仓库请勿提交 `.env`、账号密码  
 
-## 若暂时不上线
-按课程要求：交 GitHub/云盘 + README，助教本机运行  
-`python -m streamlit run app.py` 也可。
+- 无 API Key，仓库不要提交 `.env`
+- 数据是历史挂牌，页面已提示仅供参考

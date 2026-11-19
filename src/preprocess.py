@@ -11,7 +11,6 @@ RAW = ROOT / "data" / "raw" / "lianjia_rent_gps.csv"
 OUT = ROOT / "data" / "processed" / "shanghai_listings.csv"
 META = ROOT / "data" / "processed" / "preprocess_meta.txt"
 
-# 粗略行政区映射：部分小区名无法精确定位时记为未知，模型用 One-Hot 处理
 DISTRICT_KEYWORDS = [
     "浦东",
     "闵行",
@@ -53,7 +52,6 @@ def parse_rooms(layout: str) -> tuple[int, int]:
 
 def guess_district_from_text(title: str, community: str) -> str:
     blob = f"{title}{community}"
-    # 优先匹配括号内行政区，如 金桥新城（浦东）
     m = re.search(r"[（(](" + "|".join(DISTRICT_KEYWORDS) + r")[)）]", blob)
     if m:
         return m.group(1)
@@ -64,10 +62,9 @@ def guess_district_from_text(title: str, community: str) -> str:
 
 
 def guess_district_from_gps(lng: float, lat: float) -> str:
-    """基于经纬度的粗分区（课程可用近似，报告中说明局限）。"""
+    """用经纬度矩形粗分行政区，精度有限。"""
     if pd.isna(lng) or pd.isna(lat):
         return "未知"
-    # 先匹配相对明确的郊区/外围，再匹配中心城区，最后浦东
     boxes = [
         ("崇明", 121.30, 121.95, 31.45, 31.85),
         ("金山", 120.95, 121.40, 30.70, 30.95),
@@ -124,8 +121,8 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
         for t, c, lng, lat in zip(df["title"], df["community"], df["lng"], df["lat"])
     ]
     df["orient"] = df["title"].map(infer_orient)
-    df["rent_type"] = "整租"  # 该数据集为整套出租挂牌
-    df["floor_ratio"] = 0.5  # 原表无楼层，用中性占位，避免丢掉样本
+    df["rent_type"] = "整租"
+    df["floor_ratio"] = 0.5
     df["private_bath"] = 1
     df["balcony"] = 0
     df["has_metro"] = df["title"].map(lambda x: int("地铁" in str(x) or "号线" in str(x)))
@@ -157,7 +154,6 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
         ]
     ].dropna(subset=["area", "price"])
 
-    # 整租常识范围
     out = out[(out["area"] >= 15) & (out["area"] <= 250)]
     out = out[(out["price"] >= 1500) & (out["price"] <= 40000)]
     out = out[(out["price_per_sqm"] >= 30) & (out["price_per_sqm"] <= 500)]

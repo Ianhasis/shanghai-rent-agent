@@ -80,7 +80,6 @@ def main() -> None:
 
     df = pd.read_csv(DATA)
     train_df, test_df = train_test_split(df, test_size=0.2, random_state=SEED)
-    # 再从 train 划出 valid 仅用于选模型（报告可说明）
     fit_df, valid_df = train_test_split(train_df, test_size=0.2, random_state=SEED)
 
     X_fit = fit_df[NUM_FEATURES + CAT_FEATURES]
@@ -128,7 +127,6 @@ def main() -> None:
             best_name = name
             best_pipe = pipe
 
-    # 基线
     base_pred = baseline_area_unit_price(fit_df, test_df)
     report["baseline"] = {
         "name": "median_unit_price_by_rent_type * area",
@@ -137,14 +135,12 @@ def main() -> None:
 
     report["selected_model"] = best_name
     joblib.dump(best_pipe, MODEL_DIR / "best_model.joblib")
-    # 保存划分后的测试集，便于评估与 Agent 演示复现
     test_df.to_csv(RESULT_DIR / "test_listings.csv", index=False, encoding="utf-8-sig")
     fit_df.to_csv(RESULT_DIR / "fit_listings.csv", index=False, encoding="utf-8-sig")
     (RESULT_DIR / "train_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
-    # 测试集预测明细（用最优模型）
     test_out = test_df.copy()
     test_out["pred_price"] = best_pipe.predict(X_test)
     test_out["abs_error"] = (test_out["pred_price"] - test_out["price"]).abs()

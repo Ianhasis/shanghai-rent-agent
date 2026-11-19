@@ -1,4 +1,4 @@
-"""一键：预处理 -> 训练 -> 评估 -> 演示 Agent。"""
+"""一键：预处理 -> 训练 -> 评估 -> 演示。"""
 from __future__ import annotations
 
 import subprocess
@@ -21,7 +21,6 @@ def main() -> None:
     run([py, "src/plot_results.py"])
     run([py, "tests/run_samples.py"])
     run([py, "src/agent.py", "--demo", "--json-out", "results/demo_run.json"])
-    # 再跑一条浦东预算任务，丰富演示
     run(
         [
             py,
@@ -30,8 +29,6 @@ def main() -> None:
             "6000",
             "--district",
             "浦东",
-            "--rent-type",
-            "整租",
             "--min-area",
             "30",
             "--max-area",

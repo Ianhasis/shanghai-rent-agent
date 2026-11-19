@@ -1,12 +1,4 @@
-"""
-RentFilterSkill —— 本项目封装的可复用 skill。
-
-子任务：在房源库中按约束筛选，并结合回归模型的公允租金给出建议。
-输入：用户约束 dict + 房源 DataFrame + 已训练回归 Pipeline
-输出：结构化结果（候选列表、建议标签、是否需人工复核）
-依赖：本地 CSV + scikit-learn 模型，无外部付费 API，无特殊系统权限
-限制：线性模型假设；历史挂牌数据可能过时；不保证成交价
-"""
+"""房源筛选 + 公允价建议。"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -30,8 +22,6 @@ class SkillResult:
 
 
 class RentFilterSkill:
-    """开源/自研 skill：预测 + 筛选 + 建议。"""
-
     name = "rent_filter_skill"
     version = "1.0.0"
 
@@ -69,11 +59,7 @@ class RentFilterSkill:
         max_area: float | None = None,
         use_model: bool = True,
     ) -> SkillResult:
-        steps = [
-            "解析用户约束",
-            "连接本地房源库",
-            "按硬约束筛选",
-        ]
+        steps = ["解析用户约束", "连接本地房源库", "按硬约束筛选"]
         df = listings.copy()
         if district:
             df = df[df["district"] == district]
@@ -84,7 +70,6 @@ class RentFilterSkill:
         if max_area is not None:
             df = df[df["area"] <= max_area]
         if budget is not None:
-            # 先放宽到 1.15*预算，再由模型判断是否偏贵
             df = df[df["price"] <= budget * 1.15]
 
         if df.empty:
@@ -110,7 +95,6 @@ class RentFilterSkill:
             df["advice"] = labels
             df["price_gap_ratio"] = ratios
             df["need_review"] = reviews
-            # 排序：预算内优先，再按 |偏差| 与价格综合
             if budget is not None:
                 df["within_budget"] = df["price"] <= budget
             else:
@@ -121,9 +105,9 @@ class RentFilterSkill:
                 - (df["price"] / (budget if budget else df["price"].median()))
             )
             df = df.sort_values(["within_budget", "score"], ascending=[False, False])
-            steps.append("生成偏贵/合理/偏便宜建议，并对高偏差标记人工复核")
+            steps.append("生成建议并对高偏差标记人工复核")
         else:
-            steps.append("消融模式：仅规则筛选，不使用回归模型")
+            steps.append("消融模式：仅规则筛选")
             df = df.sort_values("price")
             df["pred_price"] = np.nan
             df["advice"] = "仅规则筛选(无模型估价)"
