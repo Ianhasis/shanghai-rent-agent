@@ -1,4 +1,4 @@
-"""生成期末报告 Word（毕业论文体例：图题居中，分析用“如图X所示”）。"""
+"""生成期末报告 Word：论证优先，插图服务于叙述。"""
 from __future__ import annotations
 
 import re
@@ -15,7 +15,7 @@ from report_body_text import SECTIONS
 ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / "results"
 OUT = ROOT / "docs" / "机器学习期末报告_沪租估Agent.docx"
-DESKTOP_OUT = Path(r"c:\Users\Lenovo\Desktop") / "机器学习期末报告_沪租估Agent_6to7k.docx"
+DESKTOP_OUT = Path(r"c:\Users\Lenovo\Desktop") / "机器学习期末报告_沪租估Agent_论文体例.docx"
 
 
 def set_run_font(run, name="宋体", size=12, bold=False, color=None):
@@ -45,29 +45,26 @@ def add_para(doc, text, first_line_indent=True, size=12):
     return p
 
 
-def add_fig(doc, path: Path, caption: str, analysis: str, width_in: float = 5.6):
-    """插图 + 居中图题 + 正文分析（如图X所示……）。"""
+def add_fig(doc, path: Path, caption: str, width_in: float = 5.5):
+    """只放图与图题；分析写在前后正文，避免“一图一段堆结论”。"""
     if not path.exists():
         add_para(doc, f"（缺少图片文件：{path.name}）", first_line_indent=False)
     else:
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.paragraph_format.space_before = Pt(6)
-        p.paragraph_format.space_after = Pt(3)
+        p.paragraph_format.space_before = Pt(4)
+        p.paragraph_format.space_after = Pt(2)
         p.add_run().add_picture(str(path), width=Inches(width_in))
-
     c = doc.add_paragraph()
     c.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    c.paragraph_format.space_after = Pt(6)
+    c.paragraph_format.space_after = Pt(8)
     set_run_font(c.add_run(caption), "宋体", 10.5)
 
-    add_para(doc, analysis, first_line_indent=True, size=12)
 
-
-def add_shot_placeholder(doc, fig_no: str, title: str, howto: str, analysis: str):
+def add_shot_placeholder(doc, fig_no: str, title: str, howto: str):
     box = doc.add_paragraph()
     box.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    box.paragraph_format.space_before = Pt(8)
+    box.paragraph_format.space_before = Pt(6)
     box.paragraph_format.space_after = Pt(2)
     set_run_font(
         box.add_run(f"【待补充截图】{fig_no} {title}"),
@@ -80,12 +77,10 @@ def add_shot_placeholder(doc, fig_no: str, title: str, howto: str, analysis: str
     tip.alignment = WD_ALIGN_PARAGRAPH.CENTER
     tip.paragraph_format.space_after = Pt(4)
     set_run_font(tip.add_run(howto), "宋体", 9, False, RGBColor(0x88, 0x88, 0x88))
-
     c = doc.add_paragraph()
     c.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    c.paragraph_format.space_after = Pt(6)
+    c.paragraph_format.space_after = Pt(8)
     set_run_font(c.add_run(f"{fig_no} {title}"), "宋体", 10.5)
-    add_para(doc, analysis, first_line_indent=True, size=12)
 
 
 def build_cover(doc: Document):
@@ -141,13 +136,8 @@ def add_metrics_table(doc: Document):
     cap = doc.add_paragraph()
     cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
     cap.paragraph_format.space_before = Pt(4)
-    cap.paragraph_format.space_after = Pt(6)
+    cap.paragraph_format.space_after = Pt(8)
     set_run_font(cap.add_run("表1 测试集主要定量结果"), "宋体", 10.5)
-    add_para(
-        doc,
-        "如表1所示，三种线性模型在测试集上的 MAE、RMSE 与 R² 均明显优于单价基线；其中 Lasso 验证集表现略优，故作为 Agent 默认模型。"
-        "MAPE 仍约 33%，表明相对误差不可忽视，系统必须保留人工复核机制，而不能将点预测直接视为成交价。",
-    )
 
 
 def main():
@@ -160,188 +150,131 @@ def main():
 
     build_cover(doc)
 
+    # 一
     add_heading_cn(doc, SECTIONS[0][0])
     for p in SECTIONS[0][1]:
         add_para(doc, p)
 
+    # 二
     add_heading_cn(doc, SECTIONS[1][0])
     add_para(doc, SECTIONS[1][1][0])
-    add_fig(
+    add_para(
         doc,
-        RES / "fig_architecture_cn.png",
-        "图1 系统总体结构",
-        "如图1所示，用户经由网页入口提交找房或估价任务；RentAgent 负责目标理解、参数校验与工具调度，"
-        "分别连接房源数据工具、回归模型与建议生成模块，并在高偏差或无匹配时转入人工确认。"
-        "该结构体现了模型、工具、数据与人机协作在同一任务中的组织关系。",
-        6.0,
+        "图1给出对应的总体结构：网页入口将任务交给编排器，编排器再调度数据工具、回归模型与建议模块，"
+        "并在必要时进入人工确认。该图要说明的不是界面装饰，而是“谁调用谁、失败时如何退出”。",
     )
+    add_fig(doc, RES / "fig_architecture_cn.png", "图1 系统总体结构", 5.9)
     add_para(doc, SECTIONS[1][1][1])
-    add_fig(
+    add_para(
         doc,
-        RES / "fig_workflow_cn.png",
-        "图2 Agent 任务执行流程",
-        "如图2所示，系统将端到端过程分解为入口校验、数据连接、模型调用、硬约束筛选、公允价预测、建议生成与安全检查等步骤。"
-        "每一步均具有明确输入输出与失败分支：例如参数缺失时先追问，无匹配时返回可解释提示，高偏差时请求人工复核。",
-        6.2,
+        "把上述逻辑展开为时间顺序，即得到图2的任务流程。与结构图不同，流程图强调步骤先后："
+        "先形成可执行参数，再检索与估价，最后生成建议并做安全检查。缺参追问、无匹配提示与高偏差复核，"
+        "都是这条链路上的失败分支，而不是事后附加说明。",
     )
+    add_fig(doc, RES / "fig_workflow_cn.png", "图2 Agent 任务执行流程", 6.0)
     add_para(doc, SECTIONS[1][1][2])
+    add_para(
+        doc,
+        "在用户侧，上述设计表现为两类任务与两种找房入口。图3用于展示任务入口是否清晰；"
+        "完整运行结果将在实验部分与评价问题一并给出，以免在方案章过早陷入界面细节。",
+    )
     add_shot_placeholder(
         doc,
         "图3",
         "用户任务入口界面",
-        "截取网页首页：任务选择（帮我找房 / 判断这套房贵不贵），以及找房方式（一句话找房 / 精确筛选）。",
-        "如图3所示（待作者补充真实截图），系统在打开后即可明确区分两类任务，并在找房任务下提供自然语言与结构化筛选两种入口。"
-        "该界面用于说明任务入口清晰、交互路径可理解。",
+        "截取首页：帮我找房 / 判断这套房贵不贵，以及一句话找房 / 精确筛选。",
     )
 
+    # 三
     add_heading_cn(doc, SECTIONS[2][0])
     add_para(doc, SECTIONS[2][1][0])
     add_para(doc, SECTIONS[2][1][1])
-    add_fig(
+    add_para(
         doc,
-        RES / "fig_district_cn.png",
-        "图4 清洗后房源的行政区分布",
-        "如图4所示，清洗后的房源样本覆盖多个行政区，为按区域筛选提供了数据基础。"
-        "同时也可看到样本分布并不均匀，这为后续分区误差差异提供了背景。",
-        5.9,
+        "在进入训练细节前，先确认数据工具侧是否具备按区域筛选的条件。图4显示清洗后样本的行政区分布："
+        "多区覆盖使区域约束可执行，但分布不均也预示后续分区误差可能不同。图5则给出划分方案，"
+        "保证验证与测试职责分离，避免把选模结果误当作最终泛化成绩。",
     )
-    add_fig(
-        doc,
-        RES / "fig_split_cn.png",
-        "图5 训练集、验证集与测试集划分",
-        "如图5所示，本实验固定随机种子 42，将数据划分为拟合、验证与测试三部分："
-        "验证集仅用于选择模型，测试集仅用于最终报告，从而降低评估泄漏风险。",
-        4.4,
-    )
+    add_fig(doc, RES / "fig_district_cn.png", "图4 清洗后房源的行政区分布", 5.8)
+    add_fig(doc, RES / "fig_split_cn.png", "图5 训练集、验证集与测试集划分", 4.3)
     add_para(doc, SECTIONS[2][1][2])
 
+    # 四
     add_heading_cn(doc, SECTIONS[3][0])
     for p in SECTIONS[3][1]:
         add_para(doc, p)
 
+    # 五 —— 论证主线
     add_heading_cn(doc, SECTIONS[4][0])
     add_para(doc, SECTIONS[4][1][0])
+
     add_para(doc, SECTIONS[4][1][1])
     add_metrics_table(doc)
+    add_para(
+        doc,
+        "为把表1中的对比关系可视化，图6聚焦绝对误差，图7同时给出拟合优度与相对误差，图8将 Lasso 与基线并置。"
+        "三者共同支撑同一判断：多特征回归优于单价外推；同时相对误差仍高，因而不能取消复核。",
+    )
+    add_fig(doc, RES / "fig_mae_cn.png", "图6 测试集平均绝对误差（MAE）对照", 5.6)
+    add_fig(doc, RES / "fig_r2_mape_cn.png", "图7 测试集 R² 与 MAPE", 5.8)
+    add_fig(doc, RES / "fig_metrics_compare_cn.png", "图8 Lasso 与基线关键指标对照", 5.6)
 
-    add_fig(
-        doc,
-        RES / "fig_mae_cn.png",
-        "图6 测试集平均绝对误差（MAE）对照",
-        "如图6所示，Linear、Ridge 与 Lasso 的测试集 MAE 均低于单价基线，说明引入多特征学习能够降低绝对误差。"
-        "三者数值接近，后续结合验证集表现与可解释性选择 Lasso 作为默认模型。",
-        5.7,
-    )
-    add_fig(
-        doc,
-        RES / "fig_r2_mape_cn.png",
-        "图7 测试集决定系数（R²）与平均绝对百分比误差（MAPE）",
-        "如图7所示，模型 R² 高于基线，表明可解释方差更大；但 MAPE 仍处于较高水平，"
-        "说明相对误差不可忽视。该结果直接支持“点预测需配合人工复核”的系统设计。",
-        5.9,
-    )
-    add_fig(
-        doc,
-        RES / "fig_metrics_compare_cn.png",
-        "图8 Lasso 与基线关键指标对照",
-        "如图8所示，在 MAE、RMSE 与 MAPE 三项指标上，Lasso 均优于单价基线。"
-        "该对照满足课程对基线比较的要求，并为 Agent 默认调用 Lasso 提供定量依据。",
-        5.7,
-    )
     add_para(doc, SECTIONS[4][1][2])
-    add_fig(
+    add_para(
         doc,
-        RES / "fig_pred_vs_true_cn.png",
-        "图9 预测值与挂牌价的对照（密度图）",
-        "如图9所示，样本主要沿对角线聚集，表明整体拟合方向正确；高价区域与异常低价区域离散更大，"
-        "提示尾部样本是误差分析与人工复核的重点。",
-        4.8,
+        "对应地，图9用于观察拟合的主体趋势与尾部离散，图10用于观察残差是否对称、是否存在长尾；"
+        "图12与图13把误差分解到居室与行政区切片，图14给出高偏差个案。这样，从“平均变好”推进到“哪里仍然不好”，"
+        "再自然引出安全策略，而不是先摆图后补理由。",
     )
-    add_fig(
-        doc,
-        RES / "fig_residual_cn.png",
-        "图10 测试集残差分布",
-        "如图10所示，残差大致以零为中心，但存在明显长尾。"
-        "长尾对应少数高偏差样本，解释了为何系统需要在建议流程中设置高偏差复核阈值。",
-        5.6,
-    )
-    add_para(doc, SECTIONS[4][1][3])
-    add_fig(
-        doc,
-        RES / "fig_feature_cn.png",
-        "图11 Lasso 特征影响（绝对值前十）",
-        "如图11所示，面积与部分行政区指示变量的影响较为突出，方向大体符合领域常识，"
-        "从而完成“比较特征影响”的拓展分析。解释时应注意 One-Hot 系数具有相对性，不宜直接当作独立因果效应。",
-        5.7,
-    )
-    add_para(doc, SECTIONS[4][1][4])
-    add_fig(
-        doc,
-        RES / "fig_error_by_rooms_cn.png",
-        "图12 不同居室条件下的平均绝对误差",
-        "如图12所示，不同居室切片上的平均绝对误差并不相同，说明模型表现具有结构性差异。"
-        "对误差更高的输入类型，Agent 更应依赖复核提示而非给出过度肯定的结论。",
-        5.4,
-    )
-    add_fig(
-        doc,
-        RES / "fig_error_by_district_cn.png",
-        "图13 平均误差较高的行政区（前八）",
-        "如图13所示，部分行政区平均误差相对更高，可能与样本量、行政区粗分噪声或未建模区位因素有关。"
-        "该结果用于说明系统薄弱输入区间，并为后续特征增强提供方向。",
-        5.6,
-    )
-    add_fig(
-        doc,
-        RES / "fig_failure_cn.png",
-        "图14 高百分比误差失败案例",
-        "如图14所示，按百分比误差排序的失败样本多表现为挂牌价显著偏离模型预测。"
-        "可能原因包括异常挂牌、行政区错分、标题噪声以及未纳入的装修或楼盘溢价；对应处置是触发人工复核。",
-        5.7,
-    )
-    add_para(doc, SECTIONS[4][1][5])
-    add_fig(
-        doc,
-        RES / "fig_sample_tests_cn.png",
-        "图15 Agent 可复现样例测试结果",
-        "如图15所示，手工构造的 6 个样例全部通过，覆盖正常查询与边界失败情形。"
-        "该结果说明 Agent 层评估可复现，而非仅依赖挑选出的成功截图。",
-        5.6,
-    )
-    if (RES / "fig_ablation_cn.png").exists():
-        add_fig(
-            doc,
-            RES / "fig_ablation_cn.png",
-            "图16 消融实验：启用与关闭回归模型的对照",
-            "如图16所示，关闭回归模型后系统仍可按约束检索，但失去基于公允价的建议能力。"
-            "该消融证明机器学习组件进入了建议流程，而不是仅作为展示性模块存在。",
-            5.7,
-        )
+    add_fig(doc, RES / "fig_pred_vs_true_cn.png", "图9 预测值与挂牌价对照（密度图）", 4.7)
+    add_fig(doc, RES / "fig_residual_cn.png", "图10 测试集残差分布", 5.5)
 
+    add_para(doc, SECTIONS[4][1][3])
+    add_fig(doc, RES / "fig_feature_cn.png", "图11 Lasso 特征影响（绝对值前十）", 5.6)
+
+    add_para(
+        doc,
+        "在确认特征方向大体合理后，仍需检查误差的结构性差异与失败形态，否则平均指标会掩盖薄弱输入。",
+    )
+    add_fig(doc, RES / "fig_error_by_rooms_cn.png", "图12 不同居室条件下的平均绝对误差", 5.3)
+    add_fig(doc, RES / "fig_error_by_district_cn.png", "图13 平均误差较高的行政区（前八）", 5.5)
+    add_fig(doc, RES / "fig_failure_cn.png", "图14 高百分比误差失败案例", 5.6)
+
+    add_para(doc, SECTIONS[4][1][4])
+    add_para(
+        doc,
+        "图15给出可复现样例通过情况，图16给出关闭模型后的消融对照。若消融后建议能力明显下降，"
+        "即可证明回归组件进入了任务闭环。随后用端到端截图核对：自然语言找房、单套判断与边界失败是否都能按设计工作。",
+    )
+    add_fig(doc, RES / "fig_sample_tests_cn.png", "图15 Agent 可复现样例测试结果", 5.5)
+    if (RES / "fig_ablation_cn.png").exists():
+        add_fig(doc, RES / "fig_ablation_cn.png", "图16 消融实验：启用与关闭回归模型", 5.6)
+
+    add_para(
+        doc,
+        "完整运行证据用于把“指标—误差—消融”拉回到真实交互。图17至图19分别对应一句话找房、单套判断与边界处理；"
+        "它们不是额外展示，而是对第三问（模型是否进入流程、失败是否可处置）的实例化核查。",
+    )
     add_shot_placeholder(
         doc,
         "图17",
-        "一句话找房的完整运行结果",
-        "输入例如“闵行预算6000两居，帮我看看划不划算”，截取结果摘要与至少两套房源卡片（含要价、参考合理价、相差与建议）。",
-        "如图17所示（待作者补充真实截图），系统能够在自然语言目标下完成检索与估价，并给出面向用户的结论与候选列表，"
-        "用于证明预测已接入建议流程。",
+        "一句话找房完整运行结果",
+        "输入如“闵行预算6000两居，帮我看看划不划算”，截取结论与至少两套房源卡片。",
     )
     add_shot_placeholder(
         doc,
         "图18",
         "单套判断运行结果",
-        "在“判断这套房贵不贵”中完成一次判断，截取输入与结果（参考合理价、相差比例与建议）。",
-        "如图18所示（待作者补充真实截图），同一回归模型也可服务于单套估价任务，体现 Agent 对不同任务入口的统一调度。",
+        "在“判断这套房贵不贵”中完成一次判断并截取结果区。",
     )
     add_shot_placeholder(
         doc,
         "图19",
         "异常或边界情形处理",
-        "例如将预算设为过低后运行，截取无匹配或提示补充/核实的界面。",
-        "如图19所示（待作者补充真实截图），系统在边界输入下能够给出可解释的失败或复核提示，"
-        "满足失败处理与人机协作方面的考察要求。",
+        "例如预算过低导致无匹配，或提示核实的界面。",
     )
 
+    # 六
     add_heading_cn(doc, SECTIONS[5][0])
     for p in SECTIONS[5][1]:
         add_para(doc, p)
@@ -399,7 +332,7 @@ def main():
         doc.save(DESKTOP_OUT)
         print("saved", DESKTOP_OUT)
     except Exception as e:
-        alt = Path(r"c:\Users\Lenovo\Desktop") / "机器学习期末报告_沪租估Agent_论文体例.docx"
+        alt = Path(r"c:\Users\Lenovo\Desktop") / "机器学习期末报告_沪租估Agent_论证版.docx"
         doc.save(alt)
         print("desktop locked, saved", alt, "err", e)
 
@@ -419,11 +352,8 @@ def main():
             continue
         body.append(t)
     cn = len(re.findall(r"[\u4e00-\u9fff]", "\n".join(body)))
-    src_cn = len(re.findall(r"[\u4e00-\u9fff]", "\n".join(p for _, sec in SECTIONS for p in sec)))
-    img_n = sum(1 for r in doc.part.rels.values() if "image" in r.reltype)
     print("body_chinese_chars_approx", cn)
-    print("source_section_chinese_chars", src_cn)
-    print("images", img_n)
+    print("images", sum(1 for r in doc.part.rels.values() if "image" in r.reltype))
 
 
 if __name__ == "__main__":
