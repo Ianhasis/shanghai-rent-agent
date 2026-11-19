@@ -15,7 +15,8 @@ from report_body_text import SECTIONS
 ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / "results"
 OUT = ROOT / "docs" / "机器学习期末报告_沪租估Agent.docx"
-DESKTOP_OUT = Path(r"c:\Users\Lenovo\Desktop") / "机器学习期末报告_沪租估Agent_论文体例.docx"
+DESKTOP_OUT = Path(r"c:\Users\Lenovo\Desktop") / "机器学习期末报告_沪租估Agent_图号连续版.docx"
+DESKTOP_OUT_ALT = Path(r"c:\Users\Lenovo\Desktop") / "机器学习期末报告_沪租估Agent_请打开此文件.docx"
 
 
 def set_run_font(run, name="宋体", size=12, bold=False, color=None):
@@ -185,30 +186,40 @@ def main():
     for p in s4[1]:
         add_para(doc, p)
 
-    # 五
+    # 五：先引述、再插图；图号按出现顺序 6→19 连续
+    p5 = s5[1]
     add_heading_cn(doc, s5[0])
-    add_para(doc, s5[1][0])
-    add_para(doc, s5[1][1])
+    add_para(doc, p5[0])
+    add_para(doc, p5[1])
     add_metrics_table(doc)
-    add_para(doc, s5[1][2])
+
+    add_para(doc, p5[2])
     add_fig(doc, RES / "fig_mae_cn.png", "图6 测试集平均绝对误差（MAE）对照", 5.6)
+    add_para(doc, p5[3])
     add_fig(doc, RES / "fig_r2_mape_cn.png", "图7 测试集决定系数（R²）与平均绝对百分比误差（MAPE）", 5.8)
+    add_para(doc, p5[4])
     add_fig(doc, RES / "fig_metrics_compare_cn.png", "图8 Lasso 与基线关键指标对照", 5.6)
 
-    add_para(doc, s5[1][3])
+    add_para(doc, p5[5])
     add_fig(doc, RES / "fig_pred_vs_true_cn.png", "图9 预测值与挂牌价对照（密度图）", 4.7)
+    add_para(doc, p5[6])
     add_fig(doc, RES / "fig_residual_cn.png", "图10 测试集残差分布", 5.5)
+    add_para(doc, p5[7])
     add_fig(doc, RES / "fig_error_by_rooms_cn.png", "图11 不同居室条件下的平均绝对误差", 5.3)
+    add_para(doc, p5[8])
     add_fig(doc, RES / "fig_error_by_district_cn.png", "图12 平均误差较高的行政区（前八）", 5.5)
+    add_para(doc, p5[9])
     add_fig(doc, RES / "fig_failure_cn.png", "图13 高百分比误差失败案例", 5.6)
 
-    add_para(doc, s5[1][4])
+    add_para(doc, p5[10])
     add_fig(doc, RES / "fig_feature_cn.png", "图14 Lasso 特征影响（绝对值前十）", 5.6)
 
-    add_para(doc, s5[1][5])
+    add_para(doc, p5[11])
     add_fig(doc, RES / "fig_sample_tests_cn.png", "图15 Agent 可复现样例测试结果", 5.5)
+    add_para(doc, p5[12])
     if (RES / "fig_ablation_cn.png").exists():
         add_fig(doc, RES / "fig_ablation_cn.png", "图16 消融实验：启用与关闭回归模型", 5.6)
+    add_para(doc, p5[13])
     add_shot_placeholder(doc, "图17", "一句话找房完整运行结果")
     add_shot_placeholder(doc, "图18", "单套判断运行结果")
     add_shot_placeholder(doc, "图19", "异常或边界情形处理结果")
@@ -262,21 +273,24 @@ def main():
         first_line_indent=False,
     )
 
-    try:
-        doc.save(OUT)
-        print("saved", OUT)
-    except Exception as e:
-        print("save repo docx failed:", e)
-    try:
-        doc.save(DESKTOP_OUT)
-        print("saved", DESKTOP_OUT)
-    except Exception as e:
-        alt = Path(r"c:\Users\Lenovo\Desktop") / "机器学习期末报告_沪租估Agent_规范版.docx"
+    for dest in (OUT, DESKTOP_OUT, DESKTOP_OUT_ALT):
         try:
-            doc.save(alt)
-            print("desktop locked, saved", alt, "err", e)
-        except Exception as e2:
-            print("desktop save failed:", e2)
+            doc.save(dest)
+            print("saved", dest)
+        except Exception as e:
+            print("save failed:", dest, e)
+
+    # 校验：图题必须按 1..N 连续出现
+    fig_caps = []
+    for t in doc.paragraphs:
+        m = re.match(r"^图(\d+)\s", t.text.strip())
+        if m:
+            fig_caps.append(int(m.group(1)))
+    expected = list(range(1, len(fig_caps) + 1))
+    print("figure_caption_order", fig_caps)
+    if fig_caps != expected:
+        raise SystemExit(f"FIGURE ORDER BROKEN: got {fig_caps}, expected {expected}")
+    print("figure_order_ok", True)
 
     texts = [p.text for p in doc.paragraphs]
     body = []
