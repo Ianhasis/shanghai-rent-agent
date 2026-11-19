@@ -144,7 +144,8 @@ div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
 
 
 @st.cache_resource
-def get_agent():
+def get_agent(_version: str = "goal-v1"):
+    # _version 用于在升级 Agent 能力后强制刷新缓存实例
     agent = RentAgent(top_k=8)
     agent.load()
     return agent
@@ -255,7 +256,7 @@ def main():
         unsafe_allow_html=True,
     )
 
-    agent = get_agent()
+    agent = get_agent("goal-v1")
     listings = agent.listings
     assert listings is not None
     districts = sorted([d for d in listings["district"].dropna().unique() if d != "未知"])
