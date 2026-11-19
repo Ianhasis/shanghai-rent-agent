@@ -198,12 +198,12 @@ def main():
     add_para(doc, s5[1][3])
     add_fig(doc, RES / "fig_pred_vs_true_cn.png", "图9 预测值与挂牌价对照（密度图）", 4.7)
     add_fig(doc, RES / "fig_residual_cn.png", "图10 测试集残差分布", 5.5)
-    add_fig(doc, RES / "fig_error_by_rooms_cn.png", "图12 不同居室条件下的平均绝对误差", 5.3)
-    add_fig(doc, RES / "fig_error_by_district_cn.png", "图13 平均误差较高的行政区（前八）", 5.5)
-    add_fig(doc, RES / "fig_failure_cn.png", "图14 高百分比误差失败案例", 5.6)
+    add_fig(doc, RES / "fig_error_by_rooms_cn.png", "图11 不同居室条件下的平均绝对误差", 5.3)
+    add_fig(doc, RES / "fig_error_by_district_cn.png", "图12 平均误差较高的行政区（前八）", 5.5)
+    add_fig(doc, RES / "fig_failure_cn.png", "图13 高百分比误差失败案例", 5.6)
 
     add_para(doc, s5[1][4])
-    add_fig(doc, RES / "fig_feature_cn.png", "图11 Lasso 特征影响（绝对值前十）", 5.6)
+    add_fig(doc, RES / "fig_feature_cn.png", "图14 Lasso 特征影响（绝对值前十）", 5.6)
 
     add_para(doc, s5[1][5])
     add_fig(doc, RES / "fig_sample_tests_cn.png", "图15 Agent 可复现样例测试结果", 5.5)
